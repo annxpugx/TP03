@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <err.h>
-#define bool   short
-#define true   1
-#define false  0
+#define MAXTAM    4000
+#define bool      short
+#define true      1
+#define false     0
 
 #define TAM_MAX_LINHA 250
 
@@ -44,6 +45,9 @@ typedef struct Celula {
 	Jogador jogador;        // Elemento inserido na celula.
 	struct Celula* prox; // Aponta a celula prox.
 } Celula;
+
+Jogador array[MAXTAM];   // Elementos da pilha 
+int n;               // Quantidade de array.
 
 // METODOS JOGADOR --------------------------------------------------------------------------------
 
@@ -144,16 +148,12 @@ Celula* novaCelula(Jogador j) {
 }
 
 //LISTA PROPRIAMENTE DITA =======================================================
-Celula* primeiro;
-Celula* ultimo;
-
 
 /**
  * Cria uma lista sem elementos (somente no cabeca).
  */
-void start (Jogador j) {
-   primeiro = novaCelula(j);
-   ultimo = primeiro;
+void start(){
+   n = 0;
 }
 
 
@@ -162,13 +162,21 @@ void start (Jogador j) {
  * @param x int elemento a ser inserido.
  */
 void inserirInicio(Jogador x) {
-   Celula* tmp = novaCelula(x);
-   tmp->prox = primeiro->prox;
-   primeiro->prox = tmp;
-   if (primeiro == ultimo) {                    
-      ultimo = tmp;
+   int i;
+
+   //validar insercao
+   if(n >= MAXTAM){
+      printf("Erro ao inserir!");
+      exit(1);
+   } 
+
+   //levar elementos para o fim do array
+   for(i = n; i > 0; i--){
+      array[i] = array[i-1];
    }
-   tmp = NULL;
+
+   array[0] = x;
+   n++;
 }
 
 /**
@@ -176,8 +184,13 @@ void inserirInicio(Jogador x) {
  * @param x int elemento a ser inserido.
  */
 void inserirFim(Jogador x) {
-   ultimo->prox = novaCelula(x);
-   ultimo = ultimo->prox;
+   if(n >= MAXTAM){
+      printf("Erro ao inserir!");
+      exit(1);
+   }
+
+   array[n] = x;
+   n++;
 }
 
 
@@ -187,17 +200,24 @@ void inserirFim(Jogador x) {
  * @throws Exception Se a lista nao contiver elementos.
  */
 Jogador removerInicio() {
-   if (primeiro == ultimo) {
-      errx(1, "Erro ao remover!");
+   int i;
+   Jogador resp;
+
+   //validar remocao
+   if (n == 0) {
+      printf("Erro ao remover!");
+      exit(1);
    }
 
-   Celula* tmp = primeiro;
-   primeiro = primeiro->prox;
-   Jogador resp = primeiro->jogador;
-   tmp->prox = NULL;
-   free(tmp);
-   tmp = NULL;
+   resp = array[0];
+   n--;
+
+   for(i = 0; i < n; i++){
+      array[i] = array[i+1];
+   }
+
    printf("(R) %s\n", resp.nome);
+
    return resp;
 }
 
@@ -207,20 +227,16 @@ Jogador removerInicio() {
  * @return resp int elemento a ser removido.
  */
 Jogador removerFim() {
-   if (primeiro == ultimo) {
-      errx(1, "Erro ao remover!");
-   } 
 
-   // Caminhar ate a penultima celula:
-   Celula* i;
-   for(i = primeiro; i->prox != ultimo; i = i->prox);
+   //validar remocao
+   if (n == 0) {
+      printf("Erro ao remover!");
+      exit(1);
+   }
 
-   Jogador resp = ultimo->jogador;
-   ultimo = i;
-   free(ultimo->prox);
-   i = ultimo->prox = NULL;
-   printf("(R) %s\n", resp.nome);
-   return resp;
+   printf("(R) %s\n", array[n-1].nome);
+
+   return array[--n];
 }
 
 
@@ -229,10 +245,9 @@ Jogador removerFim() {
  * @return resp int tamanho
  */
 int tamanho() {
-   int tamanho = 0;
-   Celula* i;
-   for(i = primeiro; i != ultimo; i = i->prox, tamanho++);
-   return tamanho;
+   int i;
+   for(i = 0; i < n; i++);
+   return i;
 }
 
 
@@ -244,26 +259,21 @@ int tamanho() {
  * @throws Exception Se <code>posicao</code> invalida.
  */
 void inserir(Jogador x, int pos) {
+   int i;
 
-   int tam = tamanho();
-
-   if(pos < 0 || pos > tam){
-      errx(1, "Erro ao inserir posicao (%d/ tamanho = %d) invalida!", pos, tam);
-   } else if (pos == 0){
-      inserirInicio(x);
-   } else if (pos == tam){
-      inserirFim(x);
-   } else {
-      // Caminhar ate a posicao anterior a insercao
-      int j;
-      Celula* i = primeiro;
-      for(j = 0; j < pos; j++, i = i->prox);
-
-      Celula* tmp = novaCelula(x);
-      tmp->prox = i->prox;
-      i->prox = tmp;
-      tmp = i = NULL;
+   //validar insercao
+   if(n >= MAXTAM || pos < 0 || pos > n){
+      printf("Erro ao inserir!");
+      exit(1);
    }
+
+   //levar elementos para o fim do array
+   for(i = n; i > pos; i--){
+      array[i] = array[i-1];
+   }
+
+   array[pos] = x;
+   n++;
 }
 
 
@@ -275,31 +285,24 @@ void inserir(Jogador x, int pos) {
  * @throws Exception Se <code>posicao</code> invalida.
  */
 Jogador remover(int pos) {
+   int i;
    Jogador resp;
-   int tam = tamanho();
 
-   if (primeiro == ultimo){
-      errx(1, "Erro ao remover (vazia)!");
-   } else if(pos < 0 || pos >= tam){
-      errx(1, "Erro ao remover posicao (%d/ tamanho = %d) invalida!", pos, tam);
-   } else if (pos == 0){
-      resp = removerInicio();
-   } else if (pos == tam - 1){
-      resp = removerFim();
-   } else {
-      // Caminhar ate a posicao anterior a insercao
-      Celula* i = primeiro;
-      int j;
-      for(j = 0; j < pos; j++, i = i->prox);
-
-      Celula* tmp = i->prox;
-      resp = tmp->jogador;
-      i->prox = tmp->prox;
-      tmp->prox = NULL;
-      free(tmp);
-      i = tmp = NULL;
+   //validar remocao
+   if (n == 0 || pos < 0 || pos >= n) {
+      printf("Erro ao remover!");
+      exit(1);
    }
+
+   resp = array[pos];
+   n--;
+
+   for(i = pos; i < n; i++){
+      array[i] = array[i+1];
+   }
+
    printf("(R) %s\n", resp.nome);
+
    return resp;
 }
 
@@ -307,34 +310,14 @@ Jogador remover(int pos) {
 /**
  * Mostra os elementos da lista separados por espacos.
  */
-void mostrar() {
-   Celula* i;
-   int j = 0;
-   for (i = primeiro->prox; i != NULL; i = i->prox) {
-      printf("[%d]", j);
-      imprimir(&(i->jogador));
-      j++;
+void mostrar (){
+   int i;
+
+   for(i = 0; i < n; i++){
+      printf("[%d]", i);
+      imprimir(&array[i]);
    }
-}
 
-
-/**
- * Procura um elemento e retorna se ele existe.
- * @param x Elemento a pesquisar.
- * @return <code>true</code> se o elemento existir,
- * <code>false</code> em caso contrario.
- */
-bool pesquisar(Jogador x) {
-   bool retorno = false;
-   Celula* i;
-
-   for (i = primeiro->prox; i != NULL; i = i->prox) {
-        if(i->jogador.id == x.id){
-            retorno = true;
-            i = ultimo;
-        }
-   }
-   return retorno;
 }
 
 // MAIN --------------------------------------------------------------------------------
@@ -359,8 +342,7 @@ int main(int argc, char** argv) {
 
    ler(saida); // leitura do arquivo completo
 
-   Jogador jog_init;
-   start(jog_init); // inicio da lista
+   start(); // inicio da lista
 
    for(int i = 0; i < numEntrada_id; i++){
       setJogador(&_Jogadores[i], saida[entrada_inteiro[i]]); // criação dos jogadores e inserção na lista

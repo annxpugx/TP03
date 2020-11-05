@@ -25,11 +25,15 @@ public class AlocSeq {
             MyIO.println(e.getMessage());
         }
 
-        ListaSimples lista = new ListaSimples(); 
+        Lista lista = new Lista(); 
 
         for(int i = 0; i < numEntrada; i++){
             Jogador j = new Jogador(entrada2[ids[i]]); // linhas dos ids do pub in -> jogadores
-            lista.inserirFim(j);
+            try{
+                lista.inserirFim(j);
+            }catch (Exception e){
+                System.out.println("impossivel");
+            }
         }
 
         int qtd = MyIO.readInt();
@@ -201,7 +205,7 @@ class Jogador {
 
     public String toString() {
         String str = " ## " + getNome() + " ## " + getAltura() + " ## " + getPeso() + " ## " +  getAnoNascimento()
-        + " ## " +getUniversidade()+ " ## " + getCidadeNascimento() + " ## " + getEstadoNascimento() + " ## ";
+        + " ## " +getUniversidade()+ " ## " + getCidadeNascimento() + " ## " + getEstadoNascimento() + " ##";
         return str;
     }
 }
@@ -220,113 +224,140 @@ class Celula {
 	}
 }
 
-class ListaSimples { // CONTÉM NÓ CABEÇA -> posição 0 é o primeiro elemento inserido (ignora-se o nó)
-
-    private Celula primeiro, ultimo;
-
-    public ListaSimples() {
-        primeiro = new Celula();
-        ultimo = primeiro;
+class Lista {
+    private Jogador[] array;
+    private int n;
+ 
+ 
+    /**
+     * Construtor da classe.
+     */
+    public Lista () {
+       this(4000);
     }
-
-    // INSERÇÕES --------------------------------------------------------
-
-    public void inserir(Jogador j, int pos) throws Exception {
-        int tamanho = tamanho();
-        if (pos < 0 || pos > tamanho) {
-            throw new Exception("Erro!"); // evita de adicionar em posição não existente
-        } else if (pos == 0) {
-            inserirInicio(j);
-        } else if (pos == tamanho) {
-            inserirFim(j);
-        } else {
-            Celula i = primeiro;
-            for (int x = 0; x < pos; x++, i = i.prox);
-            // iteração até i "ser" (mesmo endereço) a celula antes da posicao desejada
-            Celula tmp = new Celula(j);
-            tmp.prox = i.prox;          // nova celula aponta para a mesma celula de i
-            i.prox = tmp;               // i (celula da posicao anterior à pos) começa a apontar para a nova celula
-            tmp = i = null;
-        }
+ 
+ 
+    /**
+     * Construtor da classe.
+     * @param tamanho Tamanho da lista.
+     */
+    public Lista (int tamanho){
+       array = new Jogador[tamanho];
+       n = 0;
     }
-
-    public void inserirInicio(Jogador j) {
-        Celula tmp = new Celula(j);
-        tmp.prox = primeiro.prox; // } colocando x entre o nó cabeça
-        primeiro.prox = tmp;      // } e o antigo primeiro elemento
-        if (primeiro == ultimo)
-            ultimo = tmp;
-        tmp = null;
+ 
+ 
+    /**
+     * Insere um elemento na primeira posicao da lista e move os demais
+     * elementos para o fim da lista.
+     * @param x int elemento a ser inserido.
+     * @throws Exception Se a lista estiver cheia.
+     */
+    public void inserirInicio(Jogador x) throws Exception {
+ 
+       //validar insercao
+       if(n >= array.length){
+          throw new Exception("Erro ao inserir!");
+       } 
+ 
+       //levar elementos para o fim do array
+       for(int i = n; i > 0; i--){
+          array[i] = array[i-1];
+       }
+ 
+       array[0] = x;
+       n++;
     }
-
-    public void inserirFim(Jogador j) { // igual o inserir da Fila -> fila insere no final
-        ultimo.prox = new Celula(j);
-        ultimo = ultimo.prox;
+ 
+ 
+    /**
+     * Insere um elemento na ultima posicao da lista.
+     * @param x int elemento a ser inserido.
+     * @throws Exception Se a lista estiver cheia.
+     */
+    public void inserirFim(Jogador x) throws Exception {
+ 
+       //validar insercao
+       if(n >= array.length){
+          throw new Exception("Erro ao inserir!");
+       }
+ 
+       array[n] = x;
+       n++;
     }
-
-    // REMOÇÕES --------------------------------------------------------
-
-    public Jogador remover(int pos) throws Exception{
-        Jogador jog; int tamanho = tamanho();
-        if(primeiro == ultimo || pos < 0 || pos >= tamanho)
-            throw new Exception ("Erro!");
-        else if (pos == 0) jog = removerInicio();
-        else if (pos == tamanho - 1) jog = removerFim();
-        else{
-            Celula i = primeiro;
-            for(int j = 0; j < pos; j++, i = i.prox);
-            // iteração até i "ser" (mesmo endereço) a celula antes da posicao desejada
-            Celula tmp = i.prox;
-            jog = tmp.jogador; // elemento removido -> elemento da posicao desejada    
-            i.prox = tmp.prox;       // referencia para o elemento "removido" se perde
-            tmp.prox = null;
-            i = tmp = null;
-        }
-
-        MyIO.println("(R) " + jog.getNome());
-        return jog;
+ 
+    public void inserir(Jogador x, int pos) throws Exception {
+ 
+       //validar insercao
+       if(n >= array.length || pos < 0 || pos > n){
+          throw new Exception("Erro ao inserir!");
+       }
+ 
+       //levar elementos para o fim do array
+       for(int i = n; i > pos; i--){
+          array[i] = array[i-1];
+       }
+ 
+       array[pos] = x;
+       n++;
     }
+ 
+    public Jogador removerInicio() throws Exception {
+ 
+       //validar remocao
+       if (n == 0) {
+          throw new Exception("Erro ao remover!");
+       }
+ 
+       Jogador resp = array[0];
+       n--;
+ 
+       for(int i = 0; i < n; i++){
+          array[i] = array[i+1];
+       }
 
-    public Jogador removerInicio() throws Exception { // igual o remover da Fila -> fila remove do inicio (First In First Out)
-        if (primeiro == ultimo)
-            throw new Exception("Erro!");
-        Celula tmp = primeiro.prox; // tmp recebe a celula a ser removida
-        primeiro.prox = primeiro.prox.prox; // o proximo após o nó cabeça -> o que vem após o elemento removido
-                                            // (perde-se a referencia da celula removida)
-        Jogador jog = tmp.jogador; // elemento removido
-        tmp.prox = null; // LIBERAR MEMORIA -> OBRIGATORIO NA PROVA (novo "primeiro elemento" agr só é
-                         //                                             referenciado pelo nó)
-        tmp = null; // LIBERAR MEMORIA -> OBRIGATORIO NA PROVA
-        MyIO.println("(R) " + jog.getNome());
-        return jog;
+       MyIO.println("(R) " + resp.getNome());
+ 
+       return resp;
     }
-
+ 
     public Jogador removerFim() throws Exception {
-        if (primeiro == ultimo)
-            throw new Exception("Erro!");
-        Celula i;
-        for (i = primeiro; i.prox != ultimo; i = i.prox);
-        // iteração até i "ser" (mesmo endereço) a celula antes do "antigo" (ainda nao foi remov) ultimo
-        Jogador jog = ultimo.jogador; // elemento removido (antigo ultimo)
-        ultimo = i;                     // novo ultimo é i (celula antes do antigo ultimo) -> remoção
-        i = ultimo.prox = null;         // libera memória -> OBRIGATORIO!!!!!
-        MyIO.println("(R) " + jog.getNome());
-        return jog;
+ 
+       //validar remocao
+       if (n == 0) {
+          throw new Exception("Erro ao remover!");
+       }
+ 
+       MyIO.println("(R) " + array[n-1].getNome());
+       return array[--n];
     }
 
-    // EXTRA -----------------------------------------------------------------
+    public Jogador remover(int pos) throws Exception {
+ 
+       //validar remocao
+       if (n == 0 || pos < 0 || pos >= n) {
+          throw new Exception("Erro ao remover!");
+       }
+ 
+       Jogador resp = array[pos];
+       n--;
+ 
+       for(int i = pos; i < n; i++){
+          array[i] = array[i+1];
+       }
 
-    public void mostrar() {
-        int j = 0;
-		for (Celula i = primeiro.prox; i != null; i = i.prox) {
-            System.out.println("["+j+"] " + i.jogador.toString());
-            j++;
-		}
-	}
-
-    public int tamanho() {
-        int tamanho = 0;
-        for (Celula i = primeiro; i != ultimo; i = i.prox, tamanho++);
-        return tamanho;
+       MyIO.println("(R) " + resp.getNome());
+ 
+       return resp;
+    }
+ 
+ 
+    /**
+     * Mostra os elementos da lista separados por espacos.
+     */
+    public void mostrar (){
+       for(int i = 0; i < n; i++){
+          System.out.println("[" + i + "]" + array[i].toString());
+       }
     }
 }

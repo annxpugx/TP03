@@ -1,6 +1,6 @@
 import java.io.*;
 
-public class AlocSeq {
+public class AlocDin {
 
     public static void main(String[] args){
         String[] entrada = new String[1000];
@@ -29,9 +29,7 @@ public class AlocSeq {
 
         for(int i = 0; i < numEntrada; i++){
             Jogador j = new Jogador(entrada2[ids[i]]); // linhas dos ids do pub in -> jogadores
-            try{
-                pilha.inserirFim(j);
-            } catch (Exception e){System.out.println("Erro");}
+            pilha.inserir(j);
         }
 
         int qtd = MyIO.readInt();
@@ -43,9 +41,9 @@ public class AlocSeq {
             try{
                 if(split[0].equals("I")){
                     Jogador j = new Jogador(entrada2[Integer.parseInt(split[1])]);
-                    pilha.inserirFim(j);
+                    pilha.inserir(j);
                 }
-                else if(split[0].equals("R") || split[0].compareTo("R") == 0){ MyIO.println("(R) " + pilha.removerFim()); }
+                else if(split[0].equals("R")){ MyIO.println("(R) " + pilha.remover()); }
             } catch (Exception e){
                 MyIO.println(e.getMessage());
             }
@@ -206,48 +204,51 @@ class Celula {
 	}
 }
 
-class Pilha {
-    public Jogador[] array;
-    private int n;
- 
-    public Pilha () {
-       this(4000);
-    }
- 
-    public Pilha (int tamanho){
-       array = new Jogador[tamanho];
-       n = 0;
+class Pilha{
+
+    private Celula topo;    
+    
+    public Pilha(){
+        this.topo = null;
     }
 
-    public void inserirFim(Jogador x) throws Exception {
- 
-        //validar insercao
-        if(n >= array.length){
-           throw new Exception("Erro ao inserir!");
-        }
-  
-        array[n] = x;
-        n++;
+	public void inserir(Jogador x) {
+		Celula tmp = new Celula(x);
+		tmp.prox = topo;
+		topo = tmp;
+		tmp = null;
+	}
+
+    public String remover() throws Exception {
+		if (topo == null) {
+			throw new Exception("Erro ao remover!");
+		}
+		String resp = topo.jogador.nome;
+		Celula tmp = topo;
+		topo = topo.prox;
+		tmp.prox = null;
+		tmp = null;
+		return resp;
+	}
+
+    public void mostrar(){
+        mostrar(topo, tamanho()-1);
     }
 
-    public String removerFim() throws Exception {
- 
-        //validar remocao
-        if (n == 0) {
-           throw new Exception("Erro ao remover!");
-        }
+    public int tamanho() {
+        int tamanho = 0;
+        for (Celula i = topo; i != null; i = i.prox, tamanho++);
+        return tamanho;
+    }
 
-        String nome = array[n-1].getNome();
-        n--;
-  
-        return nome;
-     }
- 
-
-
-    public void mostrar (){
-        for(int i = 0; i < n; i++) {
-           System.out.println("[" + i + "]" + array[i].toString());
+    public void mostrar(Celula i, int j){
+        if(i != null){
+            mostrar(i.prox, j-1);
+            System.out.print("["+j+"]");
+            System.out.println(i.jogador.toString());
         }
     }
 }
+
+//System.out.println("["+j+"]"+i.jogador.toString());
+
